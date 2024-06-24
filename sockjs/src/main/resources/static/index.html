@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SockJS WebSocket Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script type="text/javascript">
+        var sock = null;
+
+        function connect() {
+            // 创建SockJS连接
+            sock = new SockJS('http://localhost:8080/websocket/');
+
+            sock.onopen = function() {
+                console.log('connection open');
+            };
+
+            sock.onmessage = function(e) {
+                console.log('message received:', e.data);
+                document.getElementById('messages').innerHTML += '<br />' + e.data;
+            };
+
+            sock.onclose = function() {
+                console.log('connection closed');
+            };
+        }
+
+        function sendMessage() {
+            var message = document.getElementById('messageInput').value;
+            sock.send(message);
+            console.log('message sent');
+        }
+    </script>
+</head>
+<body>
+<h2>SockJS WebSocket Client Example</h2>
+<button onclick="connect()">Connect</button>
+<br /><br />
+<input type="text" id="messageInput" placeholder="Type a message...">
+<button onclick="sendMessage()">Send Message</button>
+<div id="messages"></div>
+</body>
+</html>
