@@ -19,7 +19,7 @@
 
         function connect() {
             client = new StompJs.Client({
-                brokerURL: 'ws://localhost:8080/handshark', // WebSocket服务端点
+                brokerURL: 'ws://localhost:8080/handshake', // WebSocket服务端点
                 connectHeaders: {},
                 debug: function (str) {
                     console.log(str);
