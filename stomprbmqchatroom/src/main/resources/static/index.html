@@ -23,7 +23,7 @@
         function connect() {
             var username = document.getElementById('username').value; // 获取用户名
             client = new StompJs.Client({
-                brokerURL: 'ws://localhost:8080/handshark/'+username, // WebSocket服务端点
+                brokerURL: 'ws://localhost:8080/handshake/'+username, // WebSocket服务端点
                 connectHeaders: {},
                 debug: function (str) {
                     console.log(str);

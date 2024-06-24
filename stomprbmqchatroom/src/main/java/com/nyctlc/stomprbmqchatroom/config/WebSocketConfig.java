@@ -39,41 +39,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/handshark/{uid}").addInterceptors(handshakeInterceptor());
+        registry.addEndpoint("/handshake/{uid}").addInterceptors(handshakeInterceptor());
     }
-
-    @Override
-    public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(new ChannelInterceptor() {
-            @Override
-            public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-                if (accessor != null && StompCommand.DISCONNECT.equals(accessor.getCommand())) {
-                    System.out.println("STOMP Connection Closed");
-                    String uid = (String) accessor.getSessionAttributes().get("uid");
-                    userChannel.removeChannel(uid);
-                } else if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    System.out.println("STOMP Connection Established");
-                    String uid = (String) accessor.getSessionAttributes().get("uid");
-                    userChannel.addChannel(uid, channel);
-                }
-                return message;
-            }
-        });
-    }
-
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.setApplicationDestinationPrefixes("/send");
-        registry.enableStompBrokerRelay("/topic")
-                .setRelayHost(rabbitMQProperties.getRabbitmqHost())
-                .setRelayPort(Integer.parseInt(rabbitMQProperties.getRabbitmqStompPort()))
-                .setClientLogin(rabbitMQProperties.getRabbitmqUsername())
-                .setClientPasscode(rabbitMQProperties.getRabbitmqPassword())
-                .setSystemLogin(rabbitMQProperties.getRabbitmqUsername())
-                .setSystemPasscode(rabbitMQProperties.getRabbitmqPassword());
-    }
-
+    
     private HandshakeInterceptor handshakeInterceptor() {
         return new HandshakeInterceptor() {
             @Override
@@ -81,7 +49,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                                            WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
                 if (request instanceof ServletServerHttpRequest) {
                     String path = request.getURI().getPath();
-                    String prefix = "/handshark/";
+                    String prefix = "/handshake/";
                     String uid = path.substring(path.indexOf(prefix) + prefix.length());
                     if (uid.isEmpty()) {
                         return false;
@@ -104,5 +72,37 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                                        WebSocketHandler wsHandler, @Nullable Exception exception) {
             }
         };
+    }
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        registry.setApplicationDestinationPrefixes("/send");
+        registry.enableStompBrokerRelay("/topic")
+                .setRelayHost(rabbitMQProperties.getRabbitmqHost())
+                .setRelayPort(Integer.parseInt(rabbitMQProperties.getRabbitmqStompPort()))
+                .setClientLogin(rabbitMQProperties.getRabbitmqUsername())
+                .setClientPasscode(rabbitMQProperties.getRabbitmqPassword())
+                .setSystemLogin(rabbitMQProperties.getRabbitmqUsername())
+                .setSystemPasscode(rabbitMQProperties.getRabbitmqPassword());
+    }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(new ChannelInterceptor() {
+            @Override
+            public Message<?> preSend(Message<?> message, MessageChannel channel) {
+                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+                if (accessor != null && StompCommand.DISCONNECT.equals(accessor.getCommand())) {
+                    System.out.println("STOMP Connection Closed");
+                    String uid = (String) accessor.getSessionAttributes().get("uid");
+                    userChannel.removeChannel(uid);
+                } else if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    System.out.println("STOMP Connection Established");
+                    String uid = (String) accessor.getSessionAttributes().get("uid");
+                    userChannel.addChannel(uid, channel);
+                }
+                return message;
+            }
+        });
     }
 }
